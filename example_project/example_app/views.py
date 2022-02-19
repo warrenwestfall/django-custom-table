@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from custom_table.views import BaseCustomDataView
-from example_app.models import ExampleCustomTable
+from example_app.models import CustomMetadata
+
 
 class CustomTableListView(BaseCustomDataView):
+    metadata_model = CustomMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'
@@ -13,6 +15,7 @@ class CustomTableListView(BaseCustomDataView):
 
     
 class CustomTableEditView(BaseCustomDataView):
+    metadata_model = CustomMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'

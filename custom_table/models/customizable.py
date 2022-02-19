@@ -76,9 +76,9 @@ def db_field_type(db_field):
 class CustomizableMeta(models.base.ModelBase):
     def __new__(cls, name, bases, attrs):
         bases = (models.Model,)
-        if 'Meta' in attrs and getattr(attrs['Meta'], 'abstract', False):
-            return super().__new__(cls, name, bases, attrs)
-        attrs['metadata'] = models.ForeignKey('custom_table.Metadata', on_delete=models.PROTECT, db_index=True)
+        metadata_model = getattr(attrs['Meta'], 'metadata_model')
+        delattr(attrs['Meta'], 'metadata_model')
+        attrs['metadata'] = models.ForeignKey(metadata_model, on_delete=models.PROTECT, db_index=True)
         for type_name, data_type in DATA_TYPES.items():
             for i in range(data_type['num_to_create']):
                 attrs[db_field_name(type_name, i)] = data_type['field_class'](null=True,blank=True,**data_type['field_class_params'])

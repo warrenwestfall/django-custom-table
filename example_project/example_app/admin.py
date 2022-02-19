@@ -1,5 +1,5 @@
 from django.contrib import admin
-import example_app.models
+from example_app.models import CustomMetadata, ExampleCustomTable
 
-
-admin.site.register(example_app.models.ExampleCustomTable)
+admin.site.register(CustomMetadata)
+admin.site.register(ExampleCustomTable)

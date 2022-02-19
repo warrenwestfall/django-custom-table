@@ -3,37 +3,66 @@ from django.views import View
 from django.http import HttpResponse, JsonResponse
 from django.db import models
 from django.shortcuts import get_object_or_404
-from zeroconf import re
+from django.core.exceptions import ImproperlyConfigured
+from django.db.models import QuerySet
 from custom_table.models import Metadata
 
 
-class RestMetadataView(View):
-    queryset = Metadata.objects.all()
+class CustomTableMixin():
+    metadata_queryset = None
+    metadata_model = None
+
+
+    def get_metadata_queryset(self):
+        """
+        Return the list of custom tables and their metadata for this view.
+        """
+        print(self.metadata_model)
+        if self.metadata_queryset is not None:
+            metadata_queryset = self.metadata_queryset
+            if isinstance(metadata_queryset, QuerySet):
+                metadata_queryset = metadata_queryset.all()
+        elif self.metadata_model is not None:
+            metadata_queryset = self.metadata_model._default_manager.all()
+        else:
+            raise ImproperlyConfigured(
+                "%(cls)s is missing a QuerySet. Define "
+                "%(cls)s.metadata_model, %(cls)s.metadata_queryset, or override "
+                "%(cls)s.get_metadata_queryset()." % {
+                    'cls': self.__class__.__name__
+                }
+            )
+        return metadata_queryset
+
+
+class RestMetadataView(View, CustomTableMixin):
     
     @staticmethod
-    def list_data(metadata):
+    def format_data_for_list(metadata):
         return {
             'name': metadata.name,
-            'label': metadata.label,
+            'title': metadata.title,
             'plural': metadata.plural,
             'endpoint': '/rest/{}/'.format(metadata.name)
         }
 
     
     @classmethod
-    def detail_data(cls, metadata):
-        data = cls.list_data(metadata)
+    def format_data_for_detail(cls, metadata):
+        data = cls.format_data_for_list(metadata)
         data.update(metadata.form_metadata())
         return data
 
 
     def get_list(self):
-        return [self.list_data(metadata) for metadata in self.queryset]
+        metadata_queryset = self.get_metadata_queryset()
+        return [self.format_data_for_list(metadata) for metadata in metadata_queryset]
 
 
     def get_detail(self, name):
-        metadata = get_object_or_404(self.queryset, name=name)
-        return self.detail_data(metadata)
+        metadata_queryset = self.get_metadata_queryset()
+        metadata = get_object_or_404(metadata_queryset, name=name)
+        return self.format_data_for_detail(metadata)
 
 
     def get(self, request, name=None):
@@ -44,14 +73,16 @@ class RestMetadataView(View):
         return JsonResponse(response_data, safe=False)
 
 
-class BaseCustomDataView(View):
-    metadata_queryset = Metadata.objects.all()
+class BaseCustomDataView(View, CustomTableMixin):
+    metadata_queryset = None
+    metadata_model = None
     include_metadata = True
     # TODO support get filters
     # TODO pagination
 
 
     def get_object_list(self):
+        metadata_queryset = self.get_metadata_queryset()
         columns = ['pk']
         records = []
         for field, properties in self.metadata.schema['properties'].items():
@@ -133,8 +164,9 @@ class BaseCustomDataView(View):
 
 
     def dispatch(self, request, name=None, *args, **kwargs):
+        metadata_queryset = self.get_metadata_queryset()
         if name:
-            self.metadata = get_object_or_404(self.metadata_queryset, name=name)
+            self.metadata = get_object_or_404(metadata_queryset, name=name)
             self.storage_model = self.metadata.get_storage_model()
             self.queryset = self.storage_model.objects.filter(metadata=self.metadata)
         return super().dispatch(request, *args, **kwargs)

@@ -9,8 +9,8 @@ from django.apps import apps
 
 class MetadataFields(models.Model):
     name = models.CharField("Table Name", max_length=64, db_index=True, unique=True)
-    label = models.CharField("Label", max_length=128)
-    plural = models.CharField("Plural Label", max_length=128)
+    title = models.CharField("Title", max_length=128)
+    plural = models.CharField("Plural Title", max_length=128)
     storage_app_label = models.CharField("Database Table Name", max_length=64)
     storage_model = models.CharField("Database Table Name", max_length=64)
     schema = models.JSONField("Schema Data", default=dict)
@@ -29,6 +29,7 @@ class MetadataFields(models.Model):
 class Metadata(MetadataFields):
 
     class Meta:
+        abstract = True
         app_label = 'custom_table'
 
 
@@ -41,7 +42,6 @@ class Metadata(MetadataFields):
         self._update_db_fields()
         super(Metadata, self).save(*args, **kwargs)
         self._create_view()
-        self._record_version_history()
 
 
     def get_storage_model(self):
@@ -109,22 +109,3 @@ class Metadata(MetadataFields):
             if ':' in root_property:
                 del form_metadata['schema'][root_property]
         return form_metadata
-
-
-    def _record_version_history(self):
-        from custom_table.models import MetadataVersion
-        MetadataVersion.objects.create(
-            metadata=self,
-            name=self.name,
-            label=self.label,
-            plural=self.plural,
-            storage_app_label=self.storage_app_label,
-            storage_model=self.storage_model,
-            schema=self.schema,         
-        )
-
-
-class MetadataVersion(MetadataFields):
-    # TODO changed_by user
-    name = models.CharField("Table Name", max_length=64, db_index=True, unique=False)
-    metadata = models.ForeignKey(Metadata, on_delete=models.CASCADE)

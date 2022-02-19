@@ -16,14 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from custom_table.views import RestMetadataView, RestCustomDataView
-from example_app.views import CustomTableListView
+from example_app.views import CustomTableListView, CustomMetadata
 
 
 rest_urlpatterns = [
-    path('metadata/', RestMetadataView.as_view()),
-    path('metadata/<str:name>/', RestMetadataView.as_view()),
-    path('custom_data/<str:name>/', RestCustomDataView.as_view(include_metadata=True)),
-    path('custom_data/<str:name>/<int:pk>/', RestCustomDataView.as_view(include_metadata=True)),
+    path('metadata/', RestMetadataView.as_view(metadata_model=CustomMetadata)),
+    path('metadata/<str:name>/', RestMetadataView.as_view(metadata_model=CustomMetadata)),
+    path('custom_data/<str:name>/', RestCustomDataView.as_view(metadata_model=CustomMetadata, include_metadata=True)),
+    path('custom_data/<str:name>/<int:pk>/', RestCustomDataView.as_view(metadata_model=CustomMetadata, include_metadata=True)),
 ]
 
 urlpatterns = [

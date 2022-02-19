@@ -1,6 +1,6 @@
 import json
 from django.core.management.base import BaseCommand, CommandError
-from custom_table.models import Metadata
+from example_app.views import CustomMetadata
 
 
 class Command(BaseCommand):
@@ -8,9 +8,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         # The magic line
-        Metadata.objects.create(
+        CustomMetadata.objects.create(
             name = "test",
-            label = "Test",
+            title = "Test",
             plural = "Tests",
             storage_app_label = "example_app",
             storage_model = "examplecustomtable",
