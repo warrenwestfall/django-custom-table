@@ -75,7 +75,7 @@ def db_field_type(db_field):
 
 class CustomizableMeta(models.base.ModelBase):
     def __new__(cls, name, bases, attrs):
-        bases = (models.Model,)
+        # bases = (models.Model, CustomizableMixin)
         metadata_model = getattr(attrs['Meta'], 'metadata_model')
         delattr(attrs['Meta'], 'metadata_model')
         attrs['metadata'] = models.ForeignKey(metadata_model, on_delete=models.PROTECT, db_index=True)
@@ -83,3 +83,15 @@ class CustomizableMeta(models.base.ModelBase):
             for i in range(data_type['num_to_create']):
                 attrs[db_field_name(type_name, i)] = data_type['field_class'](null=True,blank=True,**data_type['field_class_params'])
         return super().__new__(cls, name, bases, attrs)
+
+
+class CustomizableMixin:
+    def get_custom_value(self, field_name):
+        field_name = self.metadata.get_db_field_name(field_name)
+        return getattr(self, field_name)
+
+
+    def set_custom_value(self, field_name, value):
+        field_name = self.metadata.get_db_field_name(field_name)
+        setattr(self, field_name, value)
+        return field_name

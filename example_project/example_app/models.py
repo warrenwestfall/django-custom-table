@@ -1,6 +1,6 @@
 from django.db import models
 
-from custom_table.models import Metadata, CustomizableMeta
+from custom_table.models import Metadata, CustomizableMeta, CustomizableMixin
 
 class CustomMetadata(Metadata):
     created = models.DateTimeField('Created', auto_now_add=True, db_index=True)
@@ -10,7 +10,7 @@ class CustomMetadata(Metadata):
         app_label = 'example_app'
 
 
-class ExampleCustomTable(metaclass=CustomizableMeta):
+class ExampleCustomTable(models.Model, CustomizableMixin, metaclass=CustomizableMeta):
     created = models.DateTimeField('Created', auto_now_add=True, db_index=True)
     modified = models.DateTimeField('Modified', auto_now=True)
 
