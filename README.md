@@ -1,1 +1,1 @@
-# django-platform
+# django-custom-table
