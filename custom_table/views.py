@@ -43,14 +43,17 @@ class BaseMetadataView(View, CustomTableMixin):
             'name': metadata.name,
             'title': metadata.title,
             'plural': metadata.plural,
-            'endpoint': '/rest/{}/'.format(metadata.name)
+            'storage_app_label':  metadata.storage_app_label,
+            'storage_model_name': metadata.storage_model_name,
+            'custom_data': metadata.custom_data,
         }
 
     
     @classmethod
     def format_data_for_detail(cls, metadata):
         data = cls.format_data_for_list(metadata)
-        data.update(metadata.form_metadata())
+        data['list_metadata'] = metadata.get_list_metadata()
+        data['form_metadata'] = metadata.get_form_metadata()
         return data
 
 
@@ -77,32 +80,30 @@ class BaseCustomTableView(View, CustomTableMixin):
         metadata_queryset = self.get_metadata_queryset()
         columns = ['pk']
         records = []
-        for field, properties in self.metadata.schema['properties'].items():
-            if 'grid:visible' in properties and not properties['grid:visible']:
-                continue
-            columns.append(field)
+        for field_name in self.metadata.get_all_field_names():
+            columns.append(field_name)
         for detail_record in self.queryset.all():
             record = {}
-            for field in columns:
-                record[field] = detail_record.get_custom_value(field)
+            for field_name in columns:
+                record[field_name] = detail_record.get_custom_value(field_name)
             records.append(record)
         return { 'records': records }
 
 
     def get_grid_list(self):
         rows = []
-        if self.include_metadata:
-            columns = [{'name': 'pk', 'title': 'pk'}]
-        else:
-            columns = ['pk']
-        for field, properties in self.metadata.schema['properties'].items():
-            if 'grid:visible' in properties and not properties['grid:visible']:
-                continue
+        columns = []
+        # if self.include_metadata:
+        #     columns = [{'name': 'pk', 'title': 'pk'}]
+        # else:
+        #     columns = ['pk']
+        for field in self.metadata.get_list_metadata():
+            # if 'visible' in field and not field['visible']:
+            #     continue
             if self.include_metadata:
-                column_data = properties
-                column_data['name'] = field
-            else:
                 column_data = field
+            else:
+                column_data = field['name']
             columns.append(column_data)
         for detail_record in self.queryset.all():
             row = [] # [detail_record.pk]
@@ -113,6 +114,7 @@ class BaseCustomTableView(View, CustomTableMixin):
                     field_name = field
                 row.append(detail_record.get_custom_value(field_name))
             rows.append(row)
+        print(columns, rows)
         return {'columns': columns, 'rows': rows}
 
 
@@ -121,11 +123,11 @@ class BaseCustomTableView(View, CustomTableMixin):
         data_record = {
             'pk': detail_record.pk
         }
-        for field_name, properties in self.metadata.schema['properties'].items():
+        for field_name in self.metadata.get_all_field_names():
             value = detail_record.get_custom_value(field_name)
             data_record[field_name] = value
         if self.include_metadata:
-            form_metadata = self.metadata.form_metadata()
+            form_metadata = self.metadata.get_form_metadata()
             return { 'metadata': form_metadata, 'data': data_record }
         else:
             return data_record
@@ -134,7 +136,7 @@ class BaseCustomTableView(View, CustomTableMixin):
     def create(self, post_data):
         db_data = {}
         new_record = self.queryset.model(metadata = self.metadata)
-        for field_name, properties in self.metadata.schema['properties'].items():
+        for field_name in self.metadata.get_all_field_names():
             if field_name in post_data:
                 new_record.set_custom_value(field_name, post_data[field_name])
         new_record.save()
@@ -159,6 +161,6 @@ class BaseCustomTableView(View, CustomTableMixin):
         metadata_queryset = self.get_metadata_queryset()
         if name:
             self.metadata = get_object_or_404(metadata_queryset, name=name)
-            self.storage_model = self.metadata.get_storage_model()
+            self.storage_model = self.metadata.storage_model
             self.queryset = self.storage_model.objects.filter(metadata=self.metadata)
         return super().dispatch(request, *args, **kwargs)

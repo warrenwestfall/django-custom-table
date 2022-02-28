@@ -13,19 +13,23 @@ class Command(BaseCommand):
             title = "Test",
             plural = "Tests",
             storage_app_label = "example_app",
-            storage_model = "examplecustomtable",
-            schema = {
-                "properties": {
-                    "name": {
-                        "type": "string",
+            storage_model_name = "examplecustomtable",
+            custom_data = [
+                {
+                    "name": "name",
+                    "type": "char",
+                    "form": {
                         "title": "Name",
-                        "maxLength": 64,
+                        "max_length": 64,
                     },
-                    "description": {
-                        "type": "string",
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "form": {
                         "title": "Description",
-                        "maxLength": 1024,
+                        "max_length": 1024,
                     },
-                }
-            },
+                },
+            ],
         )
