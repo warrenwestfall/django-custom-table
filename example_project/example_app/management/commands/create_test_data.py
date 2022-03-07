@@ -6,8 +6,6 @@ from example_app.views import CustomMetadata
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-
-        # The magic line
         CustomMetadata.objects.create(
             name = "test",
             title = "Test",

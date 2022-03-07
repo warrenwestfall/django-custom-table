@@ -46,7 +46,7 @@ class RestCustomTableDetailView(BaseCustomTableView):
 
 
 class HtmlCustomTableListView(BaseCustomTableView):
-    metadata_model = CustomMetadata
+    ct_metadata_model = CustomMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'
@@ -56,7 +56,7 @@ class HtmlCustomTableListView(BaseCustomTableView):
 
     
 class HtmlCustomTableDetailView(BaseCustomTableView):
-    metadata_model = CustomMetadata
+    ct_metadata_model = CustomMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'

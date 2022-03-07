@@ -9,7 +9,7 @@ class CustomMetadata(Metadata):
     
     class Meta:
         app_label = 'example_app'
-        format_class = RestSpaFormat()
+        ct_format_class = RestSpaFormat()
 
 
 class ExampleCustomTable(models.Model, CustomizableMixin, metaclass=CustomizableMeta):
@@ -19,6 +19,63 @@ class ExampleCustomTable(models.Model, CustomizableMixin, metaclass=Customizable
     static_text = models.TextField('Static Text', max_length=1024)
 
     class Meta:
-        metadata_model = CustomMetadata
+        ct_metadata_model = CustomMetadata
         # custom_option = True
         app_label = 'example_app'
+        ct_storage_fields = {
+        "indexed_char": {
+            "num_to_create": 10,
+            "field_class": models.CharField,
+            "field_class_params": {
+                "max_length": 128,
+                "db_index": True,
+            },
+        },
+        "char": {
+            "num_to_create": 30,
+            "field_class": models.CharField,
+            "field_class_params": {
+                "max_length": 128,
+            },
+        },
+        "indexed_integer": {
+            "num_to_create": 20,
+            "field_class": models.IntegerField,
+            "field_class_params": {
+                "db_index": True,
+            },
+        },
+        "integer": {
+            "num_to_create": 20,
+            "field_class": models.IntegerField,
+            "field_class_params": {},
+        },
+        "text": {
+            "num_to_create": 30,
+            "field_class": models.TextField,
+            "field_class_params": {},
+        },
+        "float": {
+            "num_to_create": 10,
+            "field_class": models.FloatField,
+            "field_class_params": {},
+        },
+        "boolean": {
+            "num_to_create": 10,
+            "field_class": models.BooleanField,
+            "field_class_params": {},
+        },
+        "datetime": {
+            "num_to_create": 10,
+            "field_class": models.DateTimeField,
+            "field_class_params": {},
+        },
+        "decimal-1000-2": {
+            "num_to_create": 10,
+            "field_class": models.DecimalField,
+            "field_class_params": {
+                "max_digits": 1000,
+                "decimal_places": 2,
+            },
+        },
+    }
