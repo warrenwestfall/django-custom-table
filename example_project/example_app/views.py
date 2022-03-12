@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from custom_table.views import BaseMetadataView, BaseCustomTableView
-from example_app.models import CustomMetadata
+from example_app.models import RestSpaFormatMetadata
 
 
 class RestMetadataListView(BaseMetadataView):
@@ -46,7 +46,7 @@ class RestCustomTableDetailView(BaseCustomTableView):
 
 
 class HtmlCustomTableListView(BaseCustomTableView):
-    ct_metadata_model = CustomMetadata
+    ct_metadata_model = RestSpaFormatMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'
@@ -56,7 +56,7 @@ class HtmlCustomTableListView(BaseCustomTableView):
 
     
 class HtmlCustomTableDetailView(BaseCustomTableView):
-    ct_metadata_model = CustomMetadata
+    ct_metadata_model = RestSpaFormatMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'

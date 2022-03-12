@@ -1,71 +1,55 @@
-from tests.base import BaseRestSpaFormatTest
+from tests.base import BaseDefaultFormatTest
 
 
-class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
+class MetadataDefaultFormatModelTest(BaseDefaultFormatTest):
 
 
     def setUp(self):
-        self.static_list_metadata = [
+        self.static_metadata = [
             {
                 'name': 'id',
                 'type': 'integer',
-                'hidden': True,
+                'list': {
+                    'hidden': True,
+                },
+                'form': {
+                    'readonly': True,
+                    'hidden': True,
+                },
             },
             {
                 'name': 'created',
                 'type': 'datetime',
+                'list': {},
+                'form': {},
             },
             {
                 'name': 'modified',
                 'type': 'datetime',
+                'list': {},
+                'form': {},
             },
             {
                 'name': 'static_string',
                 'type': 'char',
+                'list': {},
+                'form': {
+                    'max_length': 32,
+                },
             },
             {
                 'name': 'static_text',
                 'type': 'text',
+                'list': {},
+                'form': {
+                    'max_length': 1024,
+                },
             }
         ]
-        self.static_form_properties = {
-            'id': {
-                'type': 'integer',
-                'readonly': True,
-                'hidden': True,
-            },
-            'created': {
-                'type': 'string',
-                'format': 'date-time',
-            },
-            'modified': {
-                'type': 'string',
-                'format': 'date-time',
-            },
-            'static_string': {
-                'type': 'string',
-                'maxLength': 32,
-            },
-            'static_text': {
-                'type': 'string',
-                'maxLength': 1024,
-            }
-        }
 
 
-    def add_static_list_metadata(self, custom_list_metadata):
-        return custom_list_metadata + self.static_list_metadata
-
-
-    def add_static_form_metadata(self, custom_form_metadata):
-        form_metadata = {
-            'title': 'Test',
-            'type': 'object',
-            'properties': {}
-        }
-        form_metadata['properties'].update(custom_form_metadata)
-        form_metadata['properties'].update(self.static_form_properties)
-        return form_metadata
+    def add_static_metadata(self, custom_list_metadata):
+        return custom_list_metadata + self.static_metadata
 
 
     def test_create(self):
@@ -91,22 +75,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'name': 'ctf_char0000', 'description': 'ctf_text0000'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_char0000': 'name', 'ctf_text0000': 'description'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {'name': 'name', 'type': 'char'},
-            {'name': 'description', 'type': 'text'},
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'name': {
-                'type': 'string',
-                'title': 'Name',
-                'maxLength': 64,
-            },
-            'description': {
-                'type': 'string',
-                'title': 'Description',
-                'maxLength': 1024,
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
         self.assertEqual(metadata.get_all_field_names(),['name', 'description', 'id', 'created', 'modified', 'static_string', 'static_text'])
         self.assertEqual(metadata.get_db_field_name('name'),'ctf_char0000')
         self.assertEqual(metadata.get_db_field_name('static_string'),'static_string')
@@ -135,28 +105,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'name': 'ctf_indexed_char0000', 'nickname': 'ctf_indexed_char0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_indexed_char0000': 'name', 'ctf_indexed_char0001': 'nickname'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'name',
-                'type': 'char',
-            },
-            {
-                'name': 'nickname',
-                'type': 'char',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'name': {
-                'type': 'string',
-                'title': 'Name',
-                'maxLength': 64,
-            },
-            'nickname': {
-                'type': 'string',
-                'title': 'Nickname',
-                'maxLength': 16,
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_char(self):
@@ -182,28 +132,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'title': 'ctf_char0000', 'status': 'ctf_char0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_char0000': 'title', 'ctf_char0001': 'status'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'title',
-                'type': 'char',
-            },
-            {
-                'name': 'status',
-                'type': 'char',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'title': {
-                'type': 'string',
-                'title': 'Title',
-                'maxLength': 128,
-            },
-            'status': {
-                'type': 'string',
-                'title': 'Status',
-                'maxLength': 16,
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_indexed_integer(self):
@@ -227,26 +157,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'crm_id': 'ctf_indexed_integer0000', 'erp_id': 'ctf_indexed_integer0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_indexed_integer0000': 'crm_id', 'ctf_indexed_integer0001': 'erp_id'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'crm_id',
-                'type': 'integer',
-            },
-            {
-                'name': 'erp_id',
-                'type': 'integer',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'crm_id': {
-                'type': 'integer',
-                "title": "CRM ID",
-            },
-            'erp_id': {
-                'type': 'integer',
-                "title": "ERP ID",
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_integer(self):
@@ -270,26 +182,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'count': 'ctf_integer0000', 'quantity': 'ctf_integer0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_integer0000': 'count', 'ctf_integer0001': 'quantity'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'count',
-                'type': 'integer',
-            },
-            {
-                'name': 'quantity',
-                'type': 'integer',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'count': {
-                'type': 'integer',
-                "title": "Count",
-            },
-            'quantity': {
-                'type': 'integer',
-                "title": "Quantity",
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_text(self):
@@ -315,28 +209,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'summary': 'ctf_text0000', 'results': 'ctf_text0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_text0000': 'summary', 'ctf_text0001': 'results'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'summary',
-                'type': 'text',
-            },
-            {
-                'name': 'results',
-                'type': 'text',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'summary': {
-                'type': 'string',
-                'title': 'Summary',
-                'maxLength': 1024,
-            },
-            'results': {
-                'type': 'string',
-                'title': 'Results',
-                'maxLength': 1024,
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_float(self):
@@ -360,26 +234,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'start_amount': 'ctf_float0000', 'end_amount': 'ctf_float0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_float0000': 'start_amount', 'ctf_float0001': 'end_amount'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'start_amount',
-                'type': 'float',
-            },
-            {
-                'name': 'end_amount',
-                'type': 'float',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'start_amount': {
-                'type': 'number',
-                'title': 'Start Amount',
-            },
-            'end_amount': {
-                'type': 'number',
-                'title': 'End Amount',
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_boolean(self):
@@ -403,26 +259,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'is_active': 'ctf_boolean0000', 'is_superuser': 'ctf_boolean0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_boolean0000': 'is_active', 'ctf_boolean0001': 'is_superuser'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'is_active',
-                'type': 'boolean',
-            },
-            {
-                'name': 'is_superuser',
-                'type': 'boolean',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'is_active': {
-                'type': 'boolean',
-                'title': 'Is Active',
-            },
-            'is_superuser': {
-                'type': 'boolean',
-                'title': 'Is Superuser',
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_datetime(self):
@@ -446,28 +284,8 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'opened': 'ctf_datetime0000', 'closed': 'ctf_datetime0001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_datetime0000': 'opened', 'ctf_datetime0001': 'closed'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'opened',
-                'type': 'datetime',
-            },
-            {
-                'name': 'closed',
-                'type': 'datetime',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'opened': {
-                'type': 'string',
-                'title': 'Date Opened',
-                'format': 'date-time',
-            },
-            'closed': {
-                'type': 'string',
-                'title': 'Date Closed',
-                'format': 'date-time',
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))
 
 
     def test_create_decimal_1000_2(self):
@@ -491,25 +309,5 @@ class MetadataRestSpaFormatModelTest(BaseRestSpaFormatTest):
         self.assertEqual(metadata.custom_to_db_map, {'list_price': 'ctf_decimal-1000-20000', 'sale_price': 'ctf_decimal-1000-20001'})
         self.assertEqual(metadata.db_to_custom_map, {'ctf_decimal-1000-20000': 'list_price', 'ctf_decimal-1000-20001': 'sale_price'})
         self.assertEqual(metadata.get_custom_fields(), custom_data)
-        self.assertEqual(metadata.get_list_metadata(), self.add_static_list_metadata([
-            {
-                'name': 'list_price',
-                'type': 'decimal-1000-2',
-            },
-            {
-                'name': 'sale_price',
-                'type': 'decimal-1000-2',
-            },
-        ]))
-        self.assertEqual(metadata.get_form_metadata(), self.add_static_form_metadata({
-            'list_price': {
-                'type': 'string',
-                'title': 'List Price',
-                'format': 'decimal-1000-2',
-            },
-            'sale_price': {
-                'type': 'string',
-                'title': 'Sale Price',
-                'format': 'decimal-1000-2',
-            },
-        }))
+        self.assertEqual(metadata.get_list_metadata(), self.add_static_metadata(custom_data))
+        self.assertEqual(metadata.get_form_metadata(), self.add_static_metadata(custom_data))

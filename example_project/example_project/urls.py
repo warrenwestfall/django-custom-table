@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from example_app.models import CustomMetadata
+from example_app.models import RestSpaFormatMetadata
 from example_app.views import RestMetadataListView, RestMetadataDetailView
 from example_app.views import RestCustomTableListView, RestCustomTableDetailView
 from example_app.views import RestCustomTableListView, RestCustomTableDetailView, HtmlCustomTableListView, HtmlCustomTableDetailView
@@ -23,10 +23,10 @@ from example_app.views import RestCustomTableListView, RestCustomTableDetailView
 
 
 rest_urlpatterns = [
-    path('metadata/', RestMetadataListView.as_view(ct_metadata_model=CustomMetadata)),
-    path('metadata/<str:name>/', RestMetadataDetailView.as_view(ct_metadata_model=CustomMetadata)),
-    path('data/<str:name>/', RestCustomTableListView.as_view(ct_metadata_model=CustomMetadata, include_metadata=True)),
-    path('data/<str:name>/<int:pk>/', RestCustomTableDetailView.as_view(ct_metadata_model=CustomMetadata, include_metadata=True)),
+    path('metadata/', RestMetadataListView.as_view(ct_metadata_model=RestSpaFormatMetadata)),
+    path('metadata/<str:name>/', RestMetadataDetailView.as_view(ct_metadata_model=RestSpaFormatMetadata)),
+    path('data/<str:name>/', RestCustomTableListView.as_view(ct_metadata_model=RestSpaFormatMetadata, include_metadata=True)),
+    path('data/<str:name>/<int:pk>/', RestCustomTableDetailView.as_view(ct_metadata_model=RestSpaFormatMetadata, include_metadata=True)),
 ]
 
 html_urlpatterns = [
