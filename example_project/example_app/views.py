@@ -16,6 +16,7 @@ class RestMetadataListView(BaseMetadataView):
 
 
 class RestMetadataDetailView(BaseMetadataView):
+    always_update_fields = ['modified']
     def get(self, request, name_or_pk):
         return JsonResponse(self.get_detail(name_or_pk), safe=False)
 
@@ -61,7 +62,7 @@ class RestCustomTableDetailView(BaseCustomTableView):
 
 
 class HtmlCustomTableListView(BaseCustomTableView):
-    ct_metadata_model = RestSpaFormatMetadata
+    metadata_model = RestSpaFormatMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'
@@ -71,7 +72,7 @@ class HtmlCustomTableListView(BaseCustomTableView):
 
     
 class HtmlCustomTableDetailView(BaseCustomTableView):
-    ct_metadata_model = RestSpaFormatMetadata
+    metadata_model = RestSpaFormatMetadata
     # queryset = ExampleCustomTable.objects.all()
     # context_object_name = 'example_custom_table_list'
     # template_name = 'examplecustomtable_list.html'

@@ -10,24 +10,25 @@ from custom_table.models import Metadata
 
 class CustomTableMixin():
     metadata_queryset = None
-    ct_metadata_model = None
+    metadata_model = None
+    always_update_fields = []
 
 
     def get_metadata_queryset(self):
         """
         Return the list of custom tables and their metadata for this view.
         """
-        # print(self.ct_metadata_model)
+        # print(self.metadata_model)
         if self.metadata_queryset is not None:
             metadata_queryset = self.metadata_queryset
             if isinstance(metadata_queryset, QuerySet):
                 metadata_queryset = metadata_queryset.all()
-        elif self.ct_metadata_model is not None:
-            metadata_queryset = self.ct_metadata_model._default_manager.all()
+        elif self.metadata_model is not None:
+            metadata_queryset = self.metadata_model._default_manager.all()
         else:
             raise ImproperlyConfigured(
                 "%(cls)s is missing a QuerySet. Define "
-                "%(cls)s.ct_metadata_model, %(cls)s.metadata_queryset, or override "
+                "%(cls)s.metadata_model, %(cls)s.metadata_queryset, or override "
                 "%(cls)s.get_metadata_queryset()." % {
                     'cls': self.__class__.__name__
                 }
@@ -87,7 +88,7 @@ class BaseMetadataView(View, CustomTableMixin):
 
     def update_fields(self, name_or_pk, data):
         detail_record = self.get_metadata_record(name_or_pk)
-        update_fields = ['modified']
+        update_fields = self.always_update_fields
         for field_name, value in data.items():
             setattr(detail_record, field_name, value)
             update_fields.append(field_name)
@@ -101,7 +102,7 @@ class BaseMetadataView(View, CustomTableMixin):
 
 class BaseCustomTableView(View, CustomTableMixin):
     metadata_queryset = None
-    ct_metadata_model = None
+    metadata_model = None
     include_metadata = True
     # TODO support get filters
     # TODO pagination
