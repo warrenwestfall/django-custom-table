@@ -10,24 +10,24 @@ from custom_table.models import Metadata
 
 class CustomTableMixin():
     metadata_queryset = None
-    metadata_model = None
+    ct_metadata_model = None
 
 
     def get_metadata_queryset(self):
         """
         Return the list of custom tables and their metadata for this view.
         """
-        print(self.metadata_model)
+        # print(self.ct_metadata_model)
         if self.metadata_queryset is not None:
             metadata_queryset = self.metadata_queryset
             if isinstance(metadata_queryset, QuerySet):
                 metadata_queryset = metadata_queryset.all()
-        elif self.metadata_model is not None:
-            metadata_queryset = self.metadata_model._default_manager.all()
+        elif self.ct_metadata_model is not None:
+            metadata_queryset = self.ct_metadata_model._default_manager.all()
         else:
             raise ImproperlyConfigured(
                 "%(cls)s is missing a QuerySet. Define "
-                "%(cls)s.metadata_model, %(cls)s.metadata_queryset, or override "
+                "%(cls)s.ct_metadata_model, %(cls)s.metadata_queryset, or override "
                 "%(cls)s.get_metadata_queryset()." % {
                     'cls': self.__class__.__name__
                 }
@@ -62,15 +62,46 @@ class BaseMetadataView(View, CustomTableMixin):
         return [self.format_data_for_list(metadata) for metadata in metadata_queryset]
 
 
-    def get_detail(self, name):
+    def get_metadata_record(self, name_or_pk):
         metadata_queryset = self.get_metadata_queryset()
-        metadata = get_object_or_404(metadata_queryset, name=name)
-        return self.format_data_for_detail(metadata)
+        try:
+            return get_object_or_404(metadata_queryset, pk=int(name_or_pk))
+        except ValueError:
+            return get_object_or_404(metadata_queryset, name=name_or_pk)
+
+
+    def get_detail(self, name_or_pk):
+        detail_record = self.get_metadata_record(name_or_pk)
+        return self.format_data_for_detail(detail_record)
+
+
+    def create(self, post_data):
+        metadata_queryset = self.get_metadata_queryset()
+        new_record = metadata_queryset.model()
+        for field in metadata_queryset.model._meta.get_fields():
+            if field.name in post_data:
+                setattr(new_record, field.name, post_data[field.name])
+        new_record.save()
+        return new_record
+
+
+    def update_fields(self, name_or_pk, data):
+        detail_record = self.get_metadata_record(name_or_pk)
+        update_fields = ['modified']
+        for field_name, value in data.items():
+            setattr(detail_record, field_name, value)
+            update_fields.append(field_name)
+        detail_record.save(update_fields=update_fields)
+
+
+    def delete_record(self, name_or_pk):
+        detail_record = self.get_metadata_record(name_or_pk)
+        detail_record.delete()
 
 
 class BaseCustomTableView(View, CustomTableMixin):
     metadata_queryset = None
-    metadata_model = None
+    ct_metadata_model = None
     include_metadata = True
     # TODO support get filters
     # TODO pagination
@@ -114,7 +145,7 @@ class BaseCustomTableView(View, CustomTableMixin):
                     field_name = field
                 row.append(detail_record.get_custom_value(field_name))
             rows.append(row)
-        print(columns, rows)
+        # print(columns, rows)
         return {'columns': columns, 'rows': rows}
 
 
@@ -134,7 +165,6 @@ class BaseCustomTableView(View, CustomTableMixin):
 
 
     def create(self, post_data):
-        db_data = {}
         new_record = self.queryset.model(metadata = self.metadata)
         for field_name in self.metadata.get_all_field_names():
             if field_name in post_data:

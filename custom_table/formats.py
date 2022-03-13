@@ -66,6 +66,10 @@ class BaseFormat():
         return fields
 
 
+class DefaultFormat(BaseFormat):
+    pass
+
+
 class RestSpaFormat(BaseFormat):
     """ Format metadata for use in a Single Page App with a REST back end
         and a Javascript front end
@@ -77,9 +81,12 @@ class RestSpaFormat(BaseFormat):
         # print(all_fields)
         list_metadata = []
         for field in all_fields:
+            type = field['type']
+            if type.startswith('indexed_'):
+                type = type[8:]
             list_field = {
                 'name': field['name'],
-                'type': field['type'],
+                'type': type,
             }
             if 'list' in field:
                 for list_property, value in field['list'].items():
@@ -91,20 +98,27 @@ class RestSpaFormat(BaseFormat):
     def get_form_metadata(self, metadata):
         all_fields = self.get_all_fields(metadata)
         form_metadata = {
-            'properties': {
-                'title': metadata.title,
-                'type': 'object',
-            },
+            'title': metadata.title,
+            'type': 'object',
+            'properties': {},
         }
         for field in all_fields:
             properties = {
                 'type': field['type'],
             }
-            if field['type'] in ('char', 'text'):
+            if field['type'] in ('indexed_char', 'char', 'text',):
                 properties['type'] = 'string'
+            if field['type'] in ('indexed_integer', 'integer',):
+                properties['type'] = 'integer'
+            if field['type'] == 'float':
+                properties['type'] = 'number'
             if field['type'] == 'datetime':
                 properties['type'] = 'string'
                 properties['format'] = 'date-time'
+            if field['type'].startswith('decimal'):
+                # _, max_digits, decimal_places = field['type'].split('_')
+                properties['type'] = 'string'
+                properties['format'] = field['type']
             if 'form' in field:
                 for form_property, value in field['form'].items():
                     properties[snake_to_camel(form_property)] = value

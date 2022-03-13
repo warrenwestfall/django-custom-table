@@ -9,7 +9,7 @@ import django.db.models.options as options
 
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + (
-    'format_class',
+    'ct_format_class', 'ct_generate_view'
 )
 
 
@@ -47,7 +47,12 @@ class Metadata(models.Model):
     @transaction.atomic
     def save(self, *args, **kwargs):
         self._update_field_maps()
-        super(Metadata, self).save(*args, **kwargs)
+        if 'update_fields' in kwargs:
+            if 'custom_data' in kwargs['update_fields']:
+                # print(kwargs['update_fields'])
+                kwargs['update_fields'].append('custom_to_db_map')
+                kwargs['update_fields'].append('db_to_custom_map')
+        super().save(*args, **kwargs)
         self.create_view()
 
 
@@ -56,12 +61,14 @@ class Metadata(models.Model):
 
 
     def _update_field_maps(self):
-        from custom_table.models.customizable import DATA_TYPES, db_field_type
-        next_nums = { type_name:0 for type_name in DATA_TYPES.keys() }
+        ct_storage_fields = self.storage_model._meta.ct_storage_fields
+        next_nums = { type_name:0 for type_name in ct_storage_fields.keys() }
+        # print(next_nums)
         for field, db_field in self.custom_to_db_map.items():
-            type, current_num = db_field_type(db_field)
+            type, current_num = self.storage_model.db_field_type(db_field)
             if current_num >= next_nums[type]:
                 next_nums[type] = current_num + 1
+        # print(next_nums)
         custom_fields = self.get_custom_fields()
         for custom_field in custom_fields:
             type = custom_field['type']
@@ -73,20 +80,20 @@ class Metadata(models.Model):
 
 
     def get_custom_fields(self):
-        return self._meta.format_class.get_custom_fields(self)
+        return self._meta.ct_format_class.get_custom_fields(self)
 
 
     def get_list_metadata(self):
-        return self._meta.format_class.get_list_metadata(self)
+        return self._meta.ct_format_class.get_list_metadata(self)
 
 
     def get_form_metadata(self):
-        return self._meta.format_class.get_form_metadata(self)
+        return self._meta.ct_format_class.get_form_metadata(self)
 
 
     def get_django_fields(self):
         django_fields = []
-        prefix = self.storage_model._meta.db_field_prefix
+        prefix = self.storage_model._meta.ct_db_field_prefix
         for django_field in self.storage_model._meta.get_fields():
             if django_field.name.startswith(prefix):
                 # ignore custom fields
@@ -101,75 +108,10 @@ class Metadata(models.Model):
 
 
     def get_all_field_names(self):
-        prefix = self.storage_model._meta.db_field_prefix
-        all_field_names = [f.name for f in self.get_django_fields()]
-        all_field_names += [f['name'] for f in  self.get_custom_fields()]
+        prefix = self.storage_model._meta.ct_db_field_prefix
+        all_field_names = [f['name'] for f in  self.get_custom_fields()]
+        all_field_names += [f.name for f in self.get_django_fields()]
         return all_field_names
-    
-
-    def get_field_data(self):
-        field_data = deepcopy(self.schema['properties'])
-        # gather metadata for static Django fields
-        for field in self.storage_model._meta.get_fields():
-            if field.name.startswith(self.storage_model._meta.db_field_prefix):
-                # ignore custom fields
-                continue
-            # if field.name in field_data:
-            #     continue
-            if field.name == 'metadata':
-                # ignore FK to this metadata
-                continue
-            properties = {
-                'title': field.verbose_name,
-                'type': 'unknown'
-            }
-            field_class = field.__class__.__name__
-            if field_class.endswith('Field'):
-                properties['type'] = field_class[:-5].lower()
-            if properties['type'] in ('char', 'text'):
-                properties['type'] = 'string'
-            if properties['type'] == 'datetime':
-                properties['type'] = 'string'
-                properties['format'] = 'date-time'
-            if properties['type'] == 'bigauto':
-                properties['type'] = 'integer'
-                properties['readonly'] = True
-            if field.max_length:
-                properties['maxLength'] = field.max_length
-            print(field.name, field.__class__.__name__, properties)
-            field_data[field.name] = properties
-        return field_data
-
-
-    def form_metadata(self):
-        schema = deepcopy(self.schema)
-        schema['properties'] = self.get_field_data()
-        form_properies = {}
-        grid_properties = {}
-        for field, property in schema['properties'].items():
-            form_properies[field] = {}
-            grid_properties[field] = {}
-            schema['properties'][field] = {}
-            for name, value in property.items():
-                if name.startswith('ui:'):
-                    form_properies[field][name] = value
-                elif name.startswith('grid:'):
-                    grid_properties[field][name] = value
-                else:
-                    schema['properties'][field][name] = value
-        form_metadata = {
-            'schema': schema,
-            'uiSchema': form_properies,
-            'grid': grid_properties,
-        }
-        for root_property in list(form_metadata['schema'].keys()):
-            if root_property.startswith('ui:'):
-                form_metadata['uiSchema'][root_property] = form_metadata['schema'][root_property]
-            elif root_property.startswith('grid:'):
-                form_metadata['grid'][root_property] = form_metadata['schema'][root_property]
-            if ':' in root_property:
-                del form_metadata['schema'][root_property]
-        return form_metadata
 
 
     def get_db_field_name(self, field_name):
@@ -179,6 +121,10 @@ class Metadata(models.Model):
 
 
     def create_view(self):
+        if not hasattr(self._meta, 'ct_generate_view'):
+            return
+        if not self._meta.ct_generate_view:
+            return
         from django.db import connection
         cur = connection.cursor()
         view_name = '{}_v'.format(self.name)
