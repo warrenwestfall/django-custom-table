@@ -10,9 +10,24 @@ class RestMetadataListView(BaseMetadataView):
         return JsonResponse(self.get_list(), safe=False)
 
 
+    def post(self, request):
+        new_record = self.create(json.loads(request.body))
+        return JsonResponse({'pk': new_record.pk}, status=201)
+
+
 class RestMetadataDetailView(BaseMetadataView):
-    def get(self, request, name):
-        return JsonResponse(self.get_detail(name), safe=False)
+    def get(self, request, name_or_pk):
+        return JsonResponse(self.get_detail(name_or_pk), safe=False)
+
+    
+    def patch(self, request, name_or_pk):
+        self.update_fields(name_or_pk, json.loads(request.body))
+        return HttpResponse(status=202)
+
+
+    def delete(self, request, name_or_pk):
+        self.delete_record(name_or_pk)
+        return HttpResponse(status=204)
 
 
 class RestCustomTableListView(BaseCustomTableView):

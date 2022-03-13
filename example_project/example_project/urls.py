@@ -24,7 +24,7 @@ from example_app.views import RestCustomTableListView, RestCustomTableDetailView
 
 rest_urlpatterns = [
     path('metadata/', RestMetadataListView.as_view(ct_metadata_model=RestSpaFormatMetadata)),
-    path('metadata/<str:name>/', RestMetadataDetailView.as_view(ct_metadata_model=RestSpaFormatMetadata)),
+    path('metadata/<str:name_or_pk>/', RestMetadataDetailView.as_view(ct_metadata_model=RestSpaFormatMetadata)),
     path('data/<str:name>/', RestCustomTableListView.as_view(ct_metadata_model=RestSpaFormatMetadata, include_metadata=True)),
     path('data/<str:name>/<int:pk>/', RestCustomTableDetailView.as_view(ct_metadata_model=RestSpaFormatMetadata, include_metadata=True)),
 ]
