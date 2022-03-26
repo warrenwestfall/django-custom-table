@@ -1,10 +1,10 @@
 # django-custom-table
 
-## Overview {#overview}
+## Overview
 
 Django Custom Table is a framework for building the back end to a no-code platform in Django or for adding no-code customizble tables to a Django application.
 
-## Example Usage {#example}
+## Example Usage
 
 1. First create a metadata model. This model will store all of the customizations users make to customizable tables. The model stores the app label and model name of the custom table model being customized, so you can have only one metadata model for mutlple customizable table models.
 
