@@ -2,7 +2,7 @@
 
 ## Overview
 
-Django Custom Table is a framework for building the back end to a no-code platform in Django or for adding no-code customizble tables to a Django application.
+Django Custom Table is a framework for building the back end to a no-code platform in Django or for adding no-code customizible tables to a Django application.
 
 ## Example Usage
 
@@ -25,7 +25,7 @@ Django Custom Table is a framework for building the back end to a no-code platfo
 
     Your metadata model will need to inherit from `custom_table.models.Metadata` and provide a format class (as the `ct_format_class` meta attribute) that tells Django Custom Table how customazaton metadata will be stored and how to format the metadata for use in form and list renderng. How to build your own format class is decribribed later. This example adds some additional audit trail fields.
 
-1. Then create one or more customzable models.
+1. Next create one or more customzable models.
 
     Create a new customizable model or edit and existing one to make it customizable
 
@@ -104,7 +104,7 @@ Django Custom Table is a framework for building the back end to a no-code platfo
             ct_db_field_prefix = 'ctf_'
     ```
 
-    Set `custom_table.models.CustomizableMeta` as the metaclass and provide a `ct_storage_fields` meta attribute, a dictionary describing how to generate storage fields and how to map your users custom fields to storage fields.
+    Set `custom_table.models.CustomizableMeta` as the metaclass and provide a `ct_storage_fields` meta attribute, a dictionary describing how to generate storage fields and how to map your users custom fields to storage fields. Also it is best to provide `ct_db_field_prefix` with a string to prefix to all storage field names and prevent conflicts with ant static fields in your model.
 
 1. If you require your own form and/or list metadata formats you can create your own metadata format class
 
@@ -134,6 +134,7 @@ Django Custom Table is a framework for building the back end to a no-code platfo
             in the expected format above.
         """
         return metadata.custom_data
+
 
         def get_list_metadata(self, metadata):
             """ Should return the metadata required for a Django or front end view
@@ -187,7 +188,7 @@ Django Custom Table is a framework for building the back end to a no-code platfo
                 }
                 if field['type'] in ('indexed_char', 'char', 'text',):
                     properties['type'] = 'string'
-                if field['type'] in ('indexed_integer', 'integer',):
+                if field['typethon'] in ('indexed_integer', 'integer',):
                     properties['type'] = 'integer'
                 if field['type'] == 'float':
                     properties['type'] = 'number'
@@ -210,3 +211,70 @@ Django Custom Table is a framework for building the back end to a no-code platfo
     ```python
     from custom_table.formats import RestSpaFormat
     ```
+
+1. When creating views, you can use the Django Custom table base view classes that have helper methods for reading and writing using customizable models.
+
+    This how a view for a rest web service might look.
+
+    In a `views.py`
+
+    ```Python
+    class RestMetadataListView(BaseMetadataView):
+        metadata_model=RestSpaFormatMetadata
+        include_metadata=True
+
+        
+        def get(self, request):
+            return JsonResponse(self.get_list(), safe=False)
+
+
+        def post(self, request):
+            new_record = self.create(json.loads(request.body))
+            return JsonResponse({'pk': new_record.pk}, status=201)
+
+
+    class RestMetadataDetailView(BaseMetadataView):
+        metadata_model=RestSpaFormatMetadata
+        include_metadata=True
+        always_update_fields = ['modified']
+
+
+        def get(self, request, name_or_pk):
+            return JsonResponse(self.get_detail(name_or_pk), safe=False)
+
+        
+        def patch(self, request, name_or_pk):
+            self.update_fields(name_or_pk, json.loads(request.body))
+            return HttpResponse(status=202)
+
+
+        def delete(self, request, name_or_pk):
+            self.delete_record(name_or_pk)
+            return HttpResponse(status=204)
+    ```
+
+    In a `urls.py`
+
+    ```Python
+    rest_urlpatterns = [
+        path('metadata/', RestMetadataListView.as_view()),
+        path('metadata/<str:name_or_pk>/', RestMetadataDetailView.as_view()),
+        path('data/<str:name>/', RestCustomTableListView.as_view(),
+        path('data/<str:name>/<int:pk>/', RestCustomTableDetailView.as_view(),
+    ]
+
+    html_urlpatterns = [
+        path('<str:name>/', HtmlCustomTableListView.as_view()),
+        path('<str:name>/<int:pk>/', HtmlCustomTableDetailView.as_view()),
+    ]
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('rest/', include(rest_urlpatterns)),
+        path('html/', include(html_urlpatterns)),
+    ]
+    ```
+
+    `metadata_model` tells the view what metadata model to use to discover and render all customizations
+    `include_metadata` is used to tell the view to always include metadata in calls to `get_list()` and `get_detail()`
+    `always_update_fields` tells the view what additional fields tell Django to update in the `save()` method called in `update_fields()`
